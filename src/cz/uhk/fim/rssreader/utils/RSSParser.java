@@ -23,8 +23,9 @@ public class RSSParser {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser parser = factory.newSAXParser();
 
+        //TODO přidat kontrolu - soubor/http -> podle toho zvolit metodu/argument parse
         parser.parse(new InputSource(new URL(source).openStream()), itemHandler);
-        //parser.parse(new File(source), itemHandler);
+//        parser.parse(new File(source), itemHandler);
     }
 
     public RSSList getParsedRSS(String source) throws IOException, SAXException, ParserConfigurationException {

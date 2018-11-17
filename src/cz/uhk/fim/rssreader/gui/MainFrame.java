@@ -10,10 +10,13 @@ import org.xml.sax.SAXException;
 import javax.swing.*;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainFrame extends JFrame {
 
@@ -110,21 +113,35 @@ public class MainFrame extends JFrame {
 
 //            }
 //        });
+        btnLoad.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    List<RSSSource> sources = FileUtils.loadSources();
+                    for(RSSSource s : sources) {
+                        System.out.println(s.getName() + " - "+ s.getSource());
+                    }
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+        });
+        btnSave.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<RSSSource> sources = new ArrayList<>();
+                sources.add(new RSSSource("GPF1.cz", "https://www.zive.cz/rss/sc-47/"));
+                sources.add(new RSSSource("asdsadas", "httpssadsadz/rss/sc-47/"));
+                sources.add(new RSSSource("12SD2", "hsadsadz/rss/sc-47/"));
+                sources.add(new RSSSource("AS1ěě+ě+ --- -sad -", "asdsad/"));
+                FileUtils.saveSources(sources);
+            }
+        });
+
     }
-    btnSave.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e){
-            List<RSSSource> sources = new ArrayList<>();
-            sources.add(new RSSSource("gpf1.cz", "https.gpf1.cz"));
-            sources.add(new RSSSource("dhfghsf", "httsjdjdkjdk"));
-            sources.add(new RSSSource("321546312", "fghdfgjdj"));
-            FileUtils.saveSources(sources);
-        }
-    })
-    btnLoad.addActionListener(new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e)
-    })
+
+
+
     private void showErrorMessage(String type) {
         String message;
         switch(type){
@@ -154,3 +171,14 @@ public class MainFrame extends JFrame {
         return true;
     }
 }
+
+//TODO - dialog: - 2 fieldy (název, link) - pro oba validace (validateInput - upravit metodu pro potřeby kódu)
+//      - validace polí "název" a "link" na přítomnost středníku (replaceAll(";", "");)
+// - přidat do/upravit GUI - tlačítka "Add", "Edit", "Remove/Delete" - pro CRUD akce se sources
+//      - přidat ComboBox pro výběr zdroje feedu - pouze název feedu (bez linku)
+// - tlačítko "Load" - volitelně - buď automatická změna při výběru v ComboBoxu nebo výběr v ComboBoxu a pak Load
+// - aplikace bude fungovat jak pro lokální soubor, tak pro online feed z internetu
+// - aplikace v žádném případě nespadne na hubu - otestovat a ošetřit
+// - funkční ukládání a načítání konfigurace
+// - při spuštění aplikace se automaticky načte první záznam z konfigurace
+//          - pokud konfigurace existuje nebo není prázdná -> nutno kontrolovat
