@@ -7,12 +7,15 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 public class RSSParser {
     private RSSList rssList;
     private ItemHandler itemHandler;
+
+
 
     public RSSParser() {
         this.rssList = new RSSList();
@@ -23,13 +26,18 @@ public class RSSParser {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser parser = factory.newSAXParser();
 
-        //TODO přidat kontrolu - soubor/http -> podle toho zvolit metodu/argument parse
-        parser.parse(new InputSource(new URL(source).openStream()), itemHandler);
-//        parser.parse(new File(source), itemHandler);
+
+        if(source.contains("http")){
+            parser.parse(new InputSource(new URL(source).openStream()), itemHandler);
+        }else {
+            parser.parse(new File(source), itemHandler);
+        }
     }
+
 
     public RSSList getParsedRSS(String source) throws IOException, SAXException, ParserConfigurationException {
         parse(source);
         return rssList;
     }
+
 }

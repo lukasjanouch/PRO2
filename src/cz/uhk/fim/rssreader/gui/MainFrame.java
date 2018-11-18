@@ -2,8 +2,6 @@ package cz.uhk.fim.rssreader.gui;
 
 import cz.uhk.fim.rssreader.model.RSSItem;
 import cz.uhk.fim.rssreader.model.RSSList;
-import cz.uhk.fim.rssreader.model.RSSSource;
-import cz.uhk.fim.rssreader.utils.FileUtils;
 import cz.uhk.fim.rssreader.utils.RSSParser;
 import org.xml.sax.SAXException;
 
@@ -15,10 +13,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class MainFrame extends JFrame {
+
+
 
     private static final String VALIDATION_TYPE = "VALIDATION_TYPE";
     private static final String IO_LOAD_TYPE = "IO_LOAD_TYPE";
@@ -27,6 +26,9 @@ public class MainFrame extends JFrame {
     private JLabel lblErrorMessage;
     private JTextField txtPathField;
     private RSSList rssList;
+    private String[] options = {"Feed z odkazu", "Feed ze souboru"};
+    private JComboBox comboBox = new JComboBox(options);
+
 
     public MainFrame() {
         init();
@@ -42,54 +44,100 @@ public class MainFrame extends JFrame {
     }
 
     private void initContentUI() {
-        JPanel controlPanel = new JPanel(new BorderLayout());
 
+
+        JPanel controlPanel = new JPanel(new BorderLayout());
+        JPanel pnlButtons = new JPanel(new FlowLayout());
+
+
+        JButton btnAdd = new JButton("Add");
+        JButton btnEdit = new JButton("Edit");
         JButton btnLoad = new JButton("Load");
-        txtPathField = new JTextField();
-        JButton btnSave = new JButton("Save");
+        JButton btnRemote = new JButton("Remove");
+
         lblErrorMessage = new JLabel();
         lblErrorMessage.setForeground(Color.RED);
         lblErrorMessage.setHorizontalAlignment(SwingConstants.CENTER);
 
-        controlPanel.add(btnLoad, BorderLayout.WEST);
-        controlPanel.add(txtPathField, BorderLayout.CENTER);
-        controlPanel.add(btnSave, BorderLayout.EAST);
+
+
+
+        controlPanel.add(comboBox, BorderLayout.NORTH);
+
+        pnlButtons.add(btnAdd);
+        pnlButtons.add(btnEdit);
+        pnlButtons.add(btnLoad);
+        pnlButtons.add(btnRemote);
         controlPanel.add(lblErrorMessage, BorderLayout.SOUTH);
 
-        add(controlPanel, BorderLayout.NORTH);
+        setLayout(new BoxLayout(getContentPane(),BoxLayout.Y_AXIS));
+        add(controlPanel);
+        add(pnlButtons);
 
         JPanel contentPanel = new JPanel(new WrapLayout());
 
-        try {
-            rssList = new RSSParser().getParsedRSS("http://gpf1.cz/feed/");
-
-            for(RSSItem item : rssList.getAllItems()) {
-                CardView cardView = new CardView(item);
-                cardView.addMouseListener(new MouseAdapter() {
+        btnAdd.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                AddSrcFrame addSrcFrame = new AddSrcFrame();
+                addSrcFrame.setVisible(true);
+                addSrcFrame.addMouseListener(new MouseAdapter(){
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        if(e.getClickCount() == 2){
-                            DetailFrame  detailFrame = new DetailFrame(item);
-                            detailFrame.setVisible(true);
-                            detailFrame.addMouseListener(new MouseAdapter(){
-                                @Override
-                                public void mouseClicked(MouseEvent e) {
-                                    if(SwingUtilities.isRightMouseButton(e)){
-                                        detailFrame.setVisible(false);
-                                    }
-                                }
-                            });
+                        if(e.getButton() == MouseEvent.BUTTON3){
+                            addSrcFrame.setVisible(false);
                         }
                     }
                 });
-               contentPanel.add(cardView);
             }
-        } catch (IOException | SAXException | ParserConfigurationException e1) {
-            e1.printStackTrace();
-        }
+        });
 
-        add(new JScrollPane(contentPanel), BorderLayout.CENTER);
+        comboBox.addActionListener(new ActionListener() {
 
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                @SuppressWarnings("unchecked")
+                JComboBox<String> combo = (JComboBox<String>) event.getSource();
+                String selectedOption = (String) combo.getSelectedItem();
+
+
+                try {
+                    if (selectedOption.equals("Feed z odkazu")) {
+                        rssList = new RSSParser().getParsedRSS("https://www.zive.cz/rss/sc-47/");
+                    }else if (selectedOption.equals("Feed ze souboru")) {
+                        rssList = new RSSParser().getParsedRSS("gpf1.cz.xml");
+                    }
+                    for(RSSItem item : rssList.getAllItems()) {
+                        CardView cardView = new CardView(item);
+                        cardView.addMouseListener(new MouseAdapter() {
+                            @Override
+                            public void mouseClicked(MouseEvent e) {
+                                if(e.getClickCount() == 2){
+                                    DetailFrame  detailFrame = new DetailFrame(item);
+                                    detailFrame.setVisible(true);
+
+                                }
+                            }
+                        });contentPanel.add(cardView);
+                    }}
+                catch (IOException | SAXException | ParserConfigurationException e1) {
+                    e1.printStackTrace();
+                }
+            }
+
+        });
+
+
+
+
+
+
+
+
+
+
+        add(new JScrollPane(contentPanel));
+    }
 //        btnLoad.addActionListener(e -> {
 //            if(validateInput()) {
 //                try {
@@ -113,34 +161,34 @@ public class MainFrame extends JFrame {
 
 //            }
 //        });
-        btnLoad.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    List<RSSSource> sources = FileUtils.loadSources();
-                    for(RSSSource s : sources) {
-                        System.out.println(s.getName() + " - "+ s.getSource());
-                    }
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+
+
+    /*btnLoad.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                List<RSSSource> sources = FileUtils.loadSources();
+                for(RSSSource s : sources) {
+                    System.out.println(s.getName() + " - "+ s.getSource());
                 }
+            } catch (IOException e1) {
+                e1.printStackTrace();
             }
-        });
-        btnSave.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                List<RSSSource> sources = new ArrayList<>();
-                sources.add(new RSSSource("GPF1.cz", "https://www.zive.cz/rss/sc-47/"));
-                sources.add(new RSSSource("asdsadas", "httpssadsadz/rss/sc-47/"));
-                sources.add(new RSSSource("12SD2", "hsadsadz/rss/sc-47/"));
-                sources.add(new RSSSource("AS1ěě+ě+ --- -sad -", "asdsad/"));
-                FileUtils.saveSources(sources);
-            }
-        });
+        }
+    });*/
 
-    }
-
-
+    /*btnSave.addActionListener(new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            List<RSSSource> sources = new ArrayList<>();
+            sources.add(new RSSSource("Živě.cz", "https://www.zive.cz/rss/sc-47/"));
+            sources.add(new RSSSource("asdsadas", "httpssadsadz/rss/sc-47/"));
+            sources.add(new RSSSource("12SD2", "hsadsadz/rss/sc-47/"));
+            sources.add(new RSSSource("AS1ěě+ě+ --- -sad -", "asdsad/"));
+            FileUtils.saveSources(sources);
+        }
+    });
+}*/
 
     private void showErrorMessage(String type) {
         String message;
